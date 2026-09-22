@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>VND — Trợ lý AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0a0b;
+    --bg-raised: #131315;
+    --bg-sidebar: #0d0d0e;
+    --border: #232326;
+    --border-soft: #1b1b1d;
+    --text: #ececec;
+    --text-dim: #9a9a9f;
+    --text-faint: #55555a;
+    --gold: #d43737;
+    --gold-soft: rgba(212,55,55,0.14);
+    --gold-dim: #8f2e2e;
+    --bubble-user: #1c1c1f;
+    --radius: 14px;
+    --font-display: 'Be Vietnam Pro', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    overflow:hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  button{ font-family: inherit; }
+  ::selection{ background: var(--gold-soft); color: var(--text); }
+
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background: #2a2a2d; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover{ background: #35353a; }
+  ::-webkit-scrollbar-track{ background: transparent; }
+
+  .app{
+    display:flex;
+    height:100vh;
+    width:100vw;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width: 272px;
+    flex-shrink:0;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-soft);
+    display:flex;
+    flex-direction:column;
+    transition: margin-left .22s ease, opacity .22s ease;
+  }
+  .sidebar.collapsed{ margin-left: -272px; opacity: 0; }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding: 18px 16px 14px 16px;
+  }
+  .brand img{
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  .brand-name{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 0.2px;
+  }
+  .brand-name span{ color: var(--gold); }
+
+  .new-chat{
+    margin: 4px 12px 10px 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text);
+    display:flex;
+    align-items:center;
+    gap:9px;
+    cursor:pointer;
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .new-chat:hover{ border-color: var(--gold-dim); background: #17171a; }
+  .new-chat svg{ width:15px; height:15px; flex-shrink:0; }
+
+  .history-label{
+    padding: 14px 18px 6px 18px;
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .history{
+    flex:1;
+    overflow-y:auto;
+    padding: 0 8px;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .history-item{
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    cursor:pointer;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+  }
+  .history-item:hover{ background: var(--bg-raised); color: var(--text); }
+  .history-item.active{ background: var(--bg-raised); color: var(--text); }
+  .history-item.active{ box-shadow: inset 2px 0 0 var(--gold); }
+  .history-item .del{
+    opacity:0;
+    flex-shrink:0;
+    width: 14px; height:14px;
+    color: var(--text-faint);
+  }
+  .history-item:hover .del{ opacity:1; }
+  .history-item .del:hover{ color: #e05c5c; }
+
+  .sidebar-foot{
+    border-top: 1px solid var(--border-soft);
+    padding: 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .foot-btn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color: var(--text-dim);
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:13px;
+    padding: 6px 8px;
+    border-radius:7px;
+  }
+  .foot-btn:hover{ background: var(--bg-raised); color: var(--text); }
+  .foot-btn svg{ width:15px; height:15px; }
+
+  /* ---------- MAIN ---------- */
+  .main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    position:relative;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    flex-shrink:0;
+  }
+  .icon-btn{
+    background:none;
+    border:none;
+    color: var(--text-dim);
+    cursor:pointer;
+    width: 32px; height:32px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+  }
+  .icon-btn:hover{ background: var(--bg-raised); color: var(--text); }
+  .icon-btn svg{ width:18px; height:18px; }
+  .topbar-title{
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size:14.5px;
+    color: var(--text-dim);
+  }
+  .topbar-title b{ color: var(--text); font-weight:600; }
+
+  /* ---------- CHAT SCROLL ---------- */
+  .chat-scroll{
+    flex:1;
+    overflow-y:auto;
+    scroll-behavior:smooth;
+  }
+  .chat-inner{
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 20px 140px 20px;
+  }
+
+  /* welcome / empty state */
+  .welcome{
+    height: calc(100vh - 140px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding: 0 20px;
+  }
+  .welcome img{
+    width: 56px; height:56px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 0 1px var(--border), 0 12px 30px rgba(212,55,55,0.08);
+  }
+  .welcome h1{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 26px;
+    margin: 0 0 8px 0;
+  }
+  .welcome h1 span{ color: var(--gold); }
+  .welcome p{
+    color: var(--text-dim);
+    font-size: 14.5px;
+    margin: 0 0 30px 0;
+    max-width: 420px;
+    line-height:1.55;
+  }
+  .suggest-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    max-width: 560px;
+  }
+  .suggest-card{
+    text-align:left;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 14px;
+    cursor:pointer;
+    transition: border-color .15s ease, transform .1s ease;
+  }
+  .suggest-card:hover{ border-color: var(--gold-dim); }
+  .suggest-card:active{ transform: scale(0.985); }
+  .suggest-card .t{ font-size:13.5px; font-weight:600; margin-bottom:3px; }
+  .suggest-card .s{ font-size:12.5px; color: var(--text-faint); }
+
+  /* messages */
+  .msg{
+    display:flex;
+    gap:14px;
+    margin-bottom: 26px;
+    align-items:flex-start;
+  }
+  .msg.user{ flex-direction: row-reverse; }
+  .avatar{
+    width: 28px; height:28px;
+    border-radius: 8px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    margin-top:2px;
+  }
+  .avatar.bot{ background: var(--bg-raised); border:1px solid var(--border); }
+  .avatar.bot img{ width:100%; height:100%; object-fit:cover; }
+  .avatar.user{ background: #29292d; color: var(--text-dim); font-size:11px; font-weight:700; }
+
+  .bubble-wrap{ max-width: 78%; }
+  .msg.user .bubble-wrap{ display:flex; justify-content:flex-end; }
+  .bubble{
+    font-size: 14.5px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .msg.assistant .bubble{ color: var(--text); padding-top:3px; }
+  .msg.user .bubble{
+    background: var(--bubble-user);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 4px 16px;
+    padding: 10px 14px;
+    color: var(--text);
+  }
+
+  .typing{
+    display:flex;
+    gap:4px;
+    padding-top:8px;
+  }
+  .typing span{
+    width:6px; height:6px;
+    border-radius:50%;
+    background: var(--gold-dim);
+    animation: blink 1.3s infinite;
+  }
+  .typing span:nth-child(2){ animation-delay:.18s; }
+  .typing span:nth-child(3){ animation-delay:.36s; }
+  @keyframes blink{
+    0%, 80%, 100%{ opacity:.25; transform: translateY(0); }
+    40%{ opacity:1; transform: translateY(-2px); }
+  }
+
+  /* ---------- INPUT ---------- */
+  .input-zone{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    background: linear-gradient(to top, var(--bg) 55%, transparent);
+    padding: 24px 20px 18px 20px;
+  }
+  .input-inner{
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .input-box{
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 8px 8px 16px;
+    transition: border-color .15s ease;
+  }
+  .input-box:focus-within{ border-color: var(--gold-dim); }
+  .input-box textarea{
+    flex:1;
+    background:none;
+    border:none;
+    outline:none;
+    resize:none;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    line-height: 1.5;
+    max-height: 180px;
+    padding: 7px 0;
+  }
+  .input-box textarea::placeholder{ color: var(--text-faint); }
+  .send-btn{
+    width: 34px; height:34px;
+    border-radius:50%;
+    border:none;
+    background: var(--gold);
+    color: #0a0a0b;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    transition: opacity .15s ease, transform .1s ease;
+  }
+  .send-btn:disabled{ opacity:.35; cursor:default; }
+  .send-btn:not(:disabled):hover{ opacity:.88; }
+  .send-btn:not(:disabled):active{ transform: scale(0.92); }
+  .send-btn svg{ width:15px; height:15px; }
+
+  .input-hint{
+    text-align:center;
+    font-size: 11.5px;
+    color: var(--text-faint);
+    margin-top: 10px;
+  }
+
+  /* ---------- ATTACH (+) ---------- */
+  .attach-wrap{ position:relative; flex-shrink:0; }
+  .attach-btn{
+    width: 34px; height:34px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-dim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    transition: border-color .15s ease, color .15s ease, transform .15s ease;
+  }
+  .attach-btn:hover{ border-color: var(--gold-dim); color: var(--text); }
+  .attach-btn.open{ transform: rotate(45deg); color: var(--gold); border-color: var(--gold-dim); }
+  .attach-btn svg{ width:16px; height:16px; }
+
+  .attach-menu{
+    position:absolute;
+    left:0; bottom: calc(100% + 8px);
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+    min-width: 168px;
+    display:none;
+    flex-direction:column;
+    gap:1px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    z-index: 20;
+  }
+  .attach-menu.open{ display:flex; }
+  .attach-menu button{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    background:none;
+    border:none;
+    color: var(--text);
+    font-size: 13px;
+    padding: 9px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    text-align:left;
+  }
+  .attach-menu button:hover{ background: var(--bg-raised); }
+  .attach-menu button svg{ width:16px; height:16px; color: var(--text-dim); flex-shrink:0; }
+
+  .attach-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    padding: 0 0 8px 0;
+  }
+  .attach-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 5px 8px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    max-width: 180px;
+  }
+  .attach-chip img{
+    width:22px; height:22px;
+    border-radius:5px;
+    object-fit:cover;
+    flex-shrink:0;
+  }
+  .attach-chip span{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .attach-chip .x{
+    cursor:pointer;
+    color: var(--text-faint);
+    flex-shrink:0;
+    line-height:1;
+  }
+  .attach-chip .x:hover{ color:#e05c5c; }
+
+  /* ---------- MODAL (settings) ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 50;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    width: 420px;
+    max-width: 90vw;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+  }
+  .modal h2{
+    font-family: var(--font-display);
+    font-size: 17px;
+    margin: 0 0 4px 0;
+  }
+  .modal p.desc{
+    color: var(--text-dim);
+    font-size: 12.5px;
+    line-height:1.6;
+    margin: 0 0 18px 0;
+  }
+  .field{ margin-bottom: 14px; }
+  .field label{
+    display:block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .field input{
+    width:100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 11px;
+    color: var(--text);
+    font-size: 13px;
+    outline:none;
+  }
+  .field input:focus{ border-color: var(--gold-dim); }
+  .field .note{ font-size:11px; color: var(--text-faint); margin-top:5px; }
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top: 18px;
+  }
+  .btn{
+    padding: 8px 15px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight:500;
+    cursor:pointer;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text);
+  }
+  .btn.primary{
+    background: var(--gold);
+    color: #0a0a0b;
+    border: none;
+    font-weight:600;
+  }
+  .btn:hover{ filter: brightness(1.08); }
+
+  @media (max-width: 760px){
+    .sidebar{ position:fixed; z-index:40; height:100vh; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+    .sidebar.collapsed{ margin-left:-272px; }
+    .suggest-grid{ grid-template-columns: 1fr; }
+    .bubble-wrap{ max-width: 88%; }
+  }
+
+  .sidebar-backdrop{
+    display:none;
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.55);
+    z-index: 39;
+  }
+  .sidebar-backdrop.open{ display:block; }
+
+  /* ---------- AUTH SCREEN ---------- */
+  .auth-screen{
+    position:fixed; inset:0;
+    background: var(--bg);
+    z-index: 100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+  }
+  .auth-screen.hidden{ display:none; }
+  .auth-card{
+    width: 380px;
+    max-width: 100%;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px 24px;
+    position: relative;
+  }
+  .auth-close{
+    position:absolute;
+    top: 14px; right: 14px;
+    background:none; border:none;
+    color: var(--text-faint);
+    font-size: 15px;
+    cursor:pointer;
+    width:26px; height:26px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%;
+  }
+  .auth-close:hover{ background: var(--bg-raised); color: var(--text); }
+  .auth-card img.logo{ width:40px; height:40px; border-radius:10px; display:block; margin: 0 auto 14px; }
+  .auth-card h1{
+    font-family: var(--font-display);
+    font-size: 19px;
+    text-align:center;
+    margin: 0 0 4px;
+  }
+  .auth-card p.sub{
+    text-align:center;
+    color: var(--text-dim);
+    font-size:12.5px;
+    margin: 0 0 20px;
+  }
+  .auth-tabs{
+    display:flex;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 18px;
+  }
+  .auth-tabs button{
+    flex:1;
+    background:none;
+    border:none;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    font-weight:600;
+    padding: 8px 0;
+    border-radius: 8px;
+    cursor:pointer;
+  }
+  .auth-tabs button.active{ background: var(--gold); color:#0a0a0b; }
+  .auth-error{
+    display:none;
+    background: rgba(212,55,55,0.12);
+    border: 1px solid var(--gold-dim);
+    color: #ff9a9a;
+    font-size:12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .auth-error.show{ display:block; }
+  .auth-divider{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin: 16px 0;
+    color: var(--text-faint);
+    font-size: 11.5px;
+  }
+  .auth-divider::before, .auth-divider::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background: var(--border);
+  }
+  .google-btn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    background: #fff;
+    color: #222;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 0;
+    font-size: 13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .google-btn:hover{ filter: brightness(0.97); }
+  .google-btn svg{ width:17px; height:17px; }
+  #googleBtnContainer{ display:flex; justify-content:center; margin-top:2px; }
+  .auth-switch{
+    text-align:center;
+    font-size:12px;
+    color: var(--text-dim);
+    margin-top: 16px;
+  }
+  .auth-switch a{ color: var(--gold); cursor:pointer; text-decoration:none; }
+  .auth-terms{
+    text-align:center;
+    font-size: 10.5px;
+    line-height:1.6;
+    color: var(--text-faint);
+    margin-top: 12px;
+  }
+  .auth-terms a{ color: var(--text-dim); text-decoration:underline; }
+  .auth-terms a:hover{ color: var(--gold); }
+  .gcid-link{
+    display:block;
+    text-align:center;
+    font-size:11px;
+    color: var(--text-faint);
+    margin-top:10px;
+    cursor:pointer;
+  }
+  .gcid-link:hover{ color: var(--text-dim); }
+
+  /* ---------- ACCOUNT (sidebar) ---------- */
+  .account-box{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .account-avatar{
+    width:30px; height:30px;
+    border-radius:50%;
+    background: var(--gold-dim);
+    color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12.5px; font-weight:700;
+    flex-shrink:0;
+    overflow:hidden;
+  }
+  .account-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .account-info{ flex:1; min-width:0; }
+  .account-info .name{ font-size:12.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .account-info .email{ font-size:10.5px; color: var(--text-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .account-logout{
+    background:none; border:none;
+    color: var(--text-faint);
+    cursor:pointer;
+    flex-shrink:0;
+    display:flex;
+  }
+  .account-logout:hover{ color: #ff9a9a; }
+</style>
+
+</head>
+<body>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen hidden" id="authScreen">
+  <div class="auth-card">
+    <button type="button" class="auth-close" id="authCloseBtn" aria-label="Đóng">✕</button>
+    <img class="logo" src="https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1000048959.png" alt="VND">
+    <h1>Chào mừng đến VND</h1>
+    <p class="sub">Đăng nhập hoặc tạo tài khoản để tiếp tục</p>
+
+    <div class="auth-tabs">
+      <button type="button" id="tabLogin" class="active">Đăng nhập</button>
+      <button type="button" id="tabRegister">Đăng ký</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="ban@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Mật khẩu</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="modal-actions" style="justify-content:stretch">
+        <button type="submit" class="btn primary" style="width:100%">Đăng nhập</button>
+      </div>
+    </form>
+
+    <form id="registerForm" style="display:none">
+      <div class="field">
+        <label>Tên hiển thị</label>
+        <input type="text" id="regName" placeholder="Tên của bạn" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="ban@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Mật khẩu</label>
+        <input type="password" id="regPassword" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Nhập lại mật khẩu</label>
+        <input type="password" id="regPassword2" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div class="modal-actions" style="justify-content:stretch">
+        <button type="submit" class="btn primary" style="width:100%">Tạo tài khoản</button>
+      </div>
+      <div class="auth-terms">Bằng cách đăng ký, bạn đồng ý với <a href="dieu-khoan.html" target="_blank" id="termsLink">Điều khoản sử dụng</a> và <a href="chinh-sach-bao-mat.html" target="_blank" id="privacyLink">Chính sách bảo mật</a> của chúng tôi.</div>
+    </form>
+
+    <div class="auth-divider">hoặc</div>
+
+    <div id="googleBtnContainer"></div>
+    <button type="button" class="google-btn" id="googleFallbackBtn" style="display:none">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.3 13.1 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.6c-.5 2.9-2.2 5.4-4.6 7l7.4 5.7c4.3-4 6.8-9.9 6.8-17.2z"/><path fill="#FBBC05" d="M10.5 19.3a14.5 14.5 0 0 0 0 9.4l-7.9 6.1a24 24 0 0 1 0-21.6l7.9 6.1z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.4-5.7c-2.1 1.4-4.8 2.2-8.1 2.2-6.4 0-11.7-3.6-13.6-8.7l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+      Tiếp tục với Google
+    </button>
+    <div class="gcid-link" id="gcidLink">Cấu hình Google Client ID</div>
+
+    <div class="auth-switch" id="switchHint">
+      Chưa có tài khoản? <a id="switchToRegister">Đăng ký ngay</a>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img src="https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1000048959.png" alt="VND">
+      <div class="brand-name">VND</div>
+    </div>
+
+    <button class="new-chat" id="newChatBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Đoạn chat mới
+    </button>
+
+    <div class="history-label">Lịch sử</div>
+    <div class="history" id="historyList"></div>
+
+    <div class="sidebar-foot">
+      <button class="foot-btn" id="loginOpenBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+        Đăng nhập / Đăng ký
+      </button>
+      <div class="account-box" id="accountBox" style="display:none">
+        <div class="account-avatar" id="accountAvatar"></div>
+        <div class="account-info">
+          <div class="name" id="accountName"></div>
+          <div class="email" id="accountEmail"></div>
+        </div>
+        <button class="account-logout" id="logoutBtn" title="Đăng xuất">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        </button>
+      </div>
+      <button class="foot-btn" id="settingsBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Cài đặt
+      </button>
+    </div>
+  </aside>
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <button class="icon-btn" id="toggleSidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><line x1="9.5" y1="4" x2="9.5" y2="20"/></svg>
+      </button>
+      <div class="topbar-title">VND <b id="modelTag">· demo</b></div>
+    </div>
+
+    <div class="chat-scroll" id="chatScroll">
+      <div class="chat-inner" id="chatInner">
+        <div class="welcome" id="welcome">
+          <img src="https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1000048959.png" alt="VND">
+          <h1>Xin chào, mình là <span>VND</span></h1>
+          <p>Trợ lý AI của bạn. Hỏi bất cứ điều gì, hoặc chọn một gợi ý bên dưới để bắt đầu.</p>
+          <div class="suggest-grid">
+            <button class="suggest-card" data-p="Viết ý tưởng nội dung cho kênh Vietnamese-language của tôi">
+              <div class="t">Ý tưởng nội dung</div>
+              <div class="s">Gợi ý chủ đề cho kênh của bạn</div>
+            </button>
+            <button class="suggest-card" data-p="Giải thích một khái niệm khó bằng ví dụ đơn giản">
+              <div class="t">Giải thích khái niệm</div>
+              <div class="s">Đơn giản hoá điều gì đó khó hiểu</div>
+            </button>
+            <button class="suggest-card" data-p="Sửa lỗi chính tả và ngữ pháp trong đoạn văn tôi gửi">
+              <div class="t">Sửa văn bản</div>
+              <div class="s">Rà lỗi chính tả, ngữ pháp</div>
+            </button>
+            <button class="suggest-card" data-p="Gợi ý cách đặt tên cho một dự án web mới">
+              <div class="t">Đặt tên dự án</div>
+              <div class="s">Brainstorm tên gọi hay</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-zone">
+      <div class="input-inner">
+        <div class="attach-chips" id="attachChips"></div>
+        <div class="input-box">
+          <div class="attach-wrap">
+            <button class="attach-btn" id="attachBtn" type="button" title="Đính kèm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <div class="attach-menu" id="attachMenu">
+              <button type="button" data-action="image">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                Chọn ảnh
+              </button>
+              <button type="button" data-action="file">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                Chọn tệp
+              </button>
+              <button type="button" data-action="model">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+                Chọn model
+              </button>
+            </div>
+          </div>
+          <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
+          <input type="file" id="fileInput" multiple style="display:none">
+          <textarea id="input" placeholder="Nhắn tin cho VND..." rows="1"></textarea>
+          <button class="send-btn" id="sendBtn" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </div>
+        <div class="input-hint">VND có thể mắc lỗi. Hãy kiểm tra lại thông tin quan trọng.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Kết nối AI thật</h2>
+    <p class="desc">Mặc định VND trả lời bằng chế độ demo (không cần mạng). Để dùng AI thật, nhập endpoint và API key tương thích OpenAI (chat/completions) bên dưới — được lưu trong trình duyệt của bạn.</p>
+    <div class="field">
+      <label>API endpoint</label>
+      <input type="text" id="apiEndpoint" placeholder="https://api.openai.com/v1/chat/completions">
+    </div>
+    <div class="field">
+      <label>API key</label>
+      <input type="password" id="apiKey" placeholder="sk-...">
+      <div class="note">Key chỉ lưu cục bộ trên máy bạn (localStorage), không gửi đi đâu khác.</div>
+    </div>
+    <div class="field">
+      <label>Model</label>
+      <input type="text" id="apiModel" placeholder="gpt-4o-mini">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="clearSettings">Xoá kết nối</button>
+      <button class="btn primary" id="saveSettings">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const chatScroll = document.getElementById('chatScroll');
+  const chatInner = document.getElementById('chatInner');
+  const welcome = document.getElementById('welcome');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
+  const attachBtn = document.getElementById('attachBtn');
+  const attachMenu = document.getElementById('attachMenu');
+  const attachChips = document.getElementById('attachChips');
+  const imageInput = document.getElementById('imageInput');
+  const fileInput = document.getElementById('fileInput');
+  const historyList = document.getElementById('historyList');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const toggleSidebar = document.getElementById('toggleSidebar');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const overlay = document.getElementById('overlay');
+  const saveSettings = document.getElementById('saveSettings');
+  const clearSettings = document.getElementById('clearSettings');
+  const modelTag = document.getElementById('modelTag');
+
+  const LOGO = "https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1000048959.png";
+  const STORE_KEY = 'vnd_chats_v1';
+  const CFG_KEY = 'vnd_api_cfg_v1';
+
+  const isMobile = () => window.innerWidth <= 760;
+  if(isMobile()) sidebar.classList.add('collapsed');
+
+  let state = load();
+  let activeId = state.activeId;
+  let attachments = [];
+  if(!activeId || !state.chats[activeId]) startNewChat(false);
+  renderHistory();
+  renderActiveChat();
+  applyCfgTag();
+  renderAttachChips();
+
+  // ================= AUTH (đăng nhập / đăng ký) =================
+  const USERS_KEY = 'vnd_auth_users_v1';
+  const SESSION_KEY = 'vnd_auth_session_v1';
+  const GCID_KEY = 'vnd_google_client_id_v1';
+
+  const authScreen = document.getElementById('authScreen');
+  const loginOpenBtn = document.getElementById('loginOpenBtn');
+  const authCloseBtn = document.getElementById('authCloseBtn');
+  const accountBox = document.getElementById('accountBox');
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const authError = document.getElementById('authError');
+  let switchHint = document.getElementById('switchHint');
+  const googleBtnContainer = document.getElementById('googleBtnContainer');
+  const googleFallbackBtn = document.getElementById('googleFallbackBtn');
+  const gcidLink = document.getElementById('gcidLink');
+  const accountAvatar = document.getElementById('accountAvatar');
+  const accountName = document.getElementById('accountName');
+  const accountEmail = document.getElementById('accountEmail');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  function loadUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; }catch(e){ return {}; } }
+  function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+  function getSession(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY)); }catch(e){ return null; } }
+  function setSession(email){ localStorage.setItem(SESSION_KEY, JSON.stringify(email)); }
+  function clearSession(){ localStorage.removeItem(SESSION_KEY); }
+
+  function simpleHash(str){
+    let h = 5381;
+    for(let i=0;i<str.length;i++){ h = ((h<<5)+h) + str.charCodeAt(i); h |= 0; }
+    return 'h' + (h>>>0).toString(36);
+  }
+
+  function showAuthError(msg){ authError.textContent = msg; authError.classList.add('show'); }
+  function hideAuthError(){ authError.classList.remove('show'); authError.textContent=''; }
+
+  function switchAuthTab(tab){
+    hideAuthError();
+    if(tab === 'login'){
+      tabLogin.classList.add('active'); tabRegister.classList.remove('active');
+      loginForm.style.display=''; registerForm.style.display='none';
+      switchHint.innerHTML = 'Chưa có tài khoản? <a id="switchLink">Đăng ký ngay</a>';
+    } else {
+      tabRegister.classList.add('active'); tabLogin.classList.remove('active');
+      loginForm.style.display='none'; registerForm.style.display='';
+      switchHint.innerHTML = 'Đã có tài khoản? <a id="switchLink">Đăng nhập</a>';
+    }
+    const link = switchHint.querySelector('#switchLink');
+    if(link) link.addEventListener('click', ()=> switchAuthTab(tab==='login' ? 'register' : 'login'));
+  }
+  tabLogin.addEventListener('click', ()=> switchAuthTab('login'));
+  tabRegister.addEventListener('click', ()=> switchAuthTab('register'));
+  switchAuthTab('login');
+
+  function emailValid(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  loginForm.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    hideAuthError();
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('loginPassword').value;
+    if(!email || !pass){ showAuthError('Nhập đầy đủ email và mật khẩu.'); return; }
+    const users = loadUsers();
+    const u = users[email];
+    if(!u || u.passHash !== simpleHash(pass)){ showAuthError('Email hoặc mật khẩu không đúng.'); return; }
+    setSession(email);
+    enterApp(u, email);
+  });
+
+  registerForm.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    hideAuthError();
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('regPassword').value;
+    const pass2 = document.getElementById('regPassword2').value;
+    if(!name || !email || !pass){ showAuthError('Vui lòng điền đầy đủ thông tin.'); return; }
+    if(!emailValid(email)){ showAuthError('Email không hợp lệ.'); return; }
+    if(pass.length < 6){ showAuthError('Mật khẩu cần tối thiểu 6 ký tự.'); return; }
+    if(pass !== pass2){ showAuthError('Mật khẩu nhập lại không khớp.'); return; }
+    const users = loadUsers();
+    if(users[email]){ showAuthError('Email này đã được đăng ký.'); return; }
+    users[email] = { name, passHash: simpleHash(pass), provider:'email', picture:null };
+    saveUsers(users);
+    setSession(email);
+    enterApp(users[email], email);
+  });
+
+  function enterApp(u, email){
+    accountName.textContent = u.name || email;
+    accountEmail.textContent = email;
+    if(u.picture){
+      accountAvatar.innerHTML = '<img src="'+u.picture+'">';
+    } else {
+      accountAvatar.textContent = (u.name || email).charAt(0).toUpperCase();
+    }
+    accountBox.style.display = 'flex';
+    loginOpenBtn.style.display = 'none';
+    authScreen.classList.add('hidden');
+  }
+
+  loginOpenBtn.addEventListener('click', ()=>{
+    hideAuthError();
+    authScreen.classList.remove('hidden');
+  });
+  authCloseBtn.addEventListener('click', ()=> authScreen.classList.add('hidden'));
+  authScreen.addEventListener('click', (e)=>{ if(e.target === authScreen) authScreen.classList.add('hidden'); });
+
+  logoutBtn.addEventListener('click', ()=>{
+    clearSession();
+    accountBox.style.display = 'none';
+    loginOpenBtn.style.display = '';
+    switchAuthTab('login');
+    loginForm.reset(); registerForm.reset();
+  });
+
+  // ---- Đăng nhập Google (Google Identity Services) ----
+  function loadGcid(){ return localStorage.getItem(GCID_KEY) || ''; }
+  gcidLink.addEventListener('click', ()=>{
+    const current = loadGcid();
+    const val = prompt('Nhập Google OAuth Client ID (tạo tại Google Cloud Console > APIs & Services > Credentials).\nLưu ý: cần khai báo domain bạn host trang này làm "Authorized JavaScript origin" thì nút Google mới hoạt động.', current);
+    if(val === null) return;
+    localStorage.setItem(GCID_KEY, val.trim());
+    initGoogle();
+  });
+
+  function decodeJwt(token){
+    try{
+      const payload = token.split('.')[1];
+      const json = decodeURIComponent(atob(payload.replace(/-/g,'+').replace(/_/g,'/')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+      return JSON.parse(json);
+    }catch(e){ return null; }
+  }
+
+  function handleGoogleCredential(resp){
+    const data = decodeJwt(resp.credential);
+    if(!data || !data.email){ showAuthError('Không đọc được thông tin tài khoản Google.'); return; }
+    const email = data.email.toLowerCase();
+    const users = loadUsers();
+    if(!users[email]){
+      users[email] = { name: data.name || email, passHash: null, provider:'google', picture: data.picture || null };
+    } else {
+      users[email].picture = data.picture || users[email].picture;
+      users[email].name = data.name || users[email].name;
+    }
+    saveUsers(users);
+    setSession(email);
+    enterApp(users[email], email);
+  }
+
+  function initGoogle(){
+    const cid = loadGcid();
+    if(!cid){
+      googleBtnContainer.innerHTML = '';
+      googleFallbackBtn.style.display = 'flex';
+      return;
+    }
+    if(typeof google === 'undefined' || !google.accounts || !google.accounts.id){
+      setTimeout(initGoogle, 400);
+      return;
+    }
+    googleFallbackBtn.style.display = 'none';
+    google.accounts.id.initialize({ client_id: cid, callback: handleGoogleCredential });
+    googleBtnContainer.innerHTML = '';
+    google.accounts.id.renderButton(googleBtnContainer, { theme:'outline', size:'large', width: 332, text:'continue_with', locale:'vi' });
+  }
+  googleFallbackBtn.addEventListener('click', ()=> gcidLink.click());
+
+  // ---- khôi phục phiên đăng nhập khi tải lại trang ----
+  (function initAuthState(){
+    const email = getSession();
+    if(email){
+      const users = loadUsers();
+      const u = users[email];
+      if(u) enterApp(u, email);
+    }
+    initGoogle();
+  })();
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return { chats:{}, activeId:null };
+  }
+  function persist(){
+    state.activeId = activeId;
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function loadCfg(){
+    try{
+      const raw = localStorage.getItem(CFG_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return null;
+  }
+  function applyCfgTag(){
+    const cfg = loadCfg();
+    modelTag.textContent = (cfg && cfg.key) ? ('· ' + (cfg.model || 'kết nối API')) : '· demo';
+  }
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function startNewChat(render){
+    const current = state.chats[activeId];
+    // nếu đoạn đang mở đã rỗng (chưa gửi tin nào), dùng lại luôn, khỏi tạo thêm bản nháp trùng
+    if(current && current.messages.length === 0){
+      if(render !== false){ renderHistory(); renderActiveChat(); }
+      return;
+    }
+    const id = uid();
+    state.chats[id] = { id, title: 'Đoạn chat mới', messages: [] };
+    activeId = id;
+    persist();
+    if(render !== false){ renderHistory(); renderActiveChat(); }
+  }
+
+  function renderHistory(){
+    historyList.innerHTML = '';
+    const chats = Object.values(state.chats)
+      .filter(c=> c.messages.length > 0 || c.id === activeId)
+      .sort((a,b)=> (b._t||0) - (a._t||0));
+    chats.forEach(c=>{
+      const el = document.createElement('div');
+      el.className = 'history-item' + (c.id === activeId ? ' active' : '');
+      el.innerHTML = '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(c.title)+'</span>'+
+        '<svg class="del" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>';
+      el.addEventListener('click', (e)=>{
+        if(e.target.closest('.del')){
+          e.stopPropagation();
+          delete state.chats[c.id];
+          if(activeId === c.id){
+            const rest = Object.keys(state.chats);
+            if(rest.length){ activeId = rest[0]; } else { startNewChat(false); }
+          }
+          persist(); renderHistory(); renderActiveChat();
+          return;
+        }
+        activeId = c.id;
+        persist(); renderHistory(); renderActiveChat();
+        if(isMobile()) closeSidebar();
+      });
+      historyList.appendChild(el);
+    });
+  }
+
+  function renderActiveChat(){
+    const chat = state.chats[activeId];
+    chatInner.innerHTML = '';
+    if(!chat.messages.length){
+      chatInner.appendChild(welcome);
+      welcome.style.display = 'flex';
+      return;
+    }
+    chat.messages.forEach(m=> chatInner.appendChild(buildMsgEl(m.role, m.content, m.atts)));
+    scrollToBottom();
+  }
+
+  function buildMsgEl(role, content, atts){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + role;
+    const avatar = document.createElement('div');
+    if(role === 'assistant'){
+      avatar.className = 'avatar bot';
+      const img = document.createElement('img');
+      img.src = LOGO;
+      avatar.appendChild(img);
+    } else {
+      avatar.className = 'avatar user';
+      avatar.textContent = 'B';
+    }
+    const bw = document.createElement('div');
+    bw.className = 'bubble-wrap';
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const imgAtts = (atts || []).filter(a=> a.kind === 'image' && a.dataUrl);
+    if(imgAtts.length){
+      const grid = document.createElement('div');
+      grid.style.display = 'flex';
+      grid.style.flexWrap = 'wrap';
+      grid.style.gap = '6px';
+      grid.style.marginBottom = content ? '8px' : '0';
+      imgAtts.forEach(a=>{
+        const im = document.createElement('img');
+        im.src = a.dataUrl;
+        im.style.width = '96px'; im.style.height = '96px';
+        im.style.objectFit = 'cover'; im.style.borderRadius = '10px';
+        grid.appendChild(im);
+      });
+      b.appendChild(grid);
+    }
+    const fileAtts = (atts || []).filter(a=> a.kind === 'file');
+    fileAtts.forEach(a=>{
+      const chip = document.createElement('div');
+      chip.style.fontSize = '11.5px';
+      chip.style.color = 'var(--text-dim)';
+      chip.style.marginBottom = '4px';
+      chip.textContent = '📎 ' + a.name;
+      b.appendChild(chip);
+    });
+    if(content){
+      const t = document.createElement('div');
+      t.textContent = content;
+      b.appendChild(t);
+    }
+    bw.appendChild(b);
+    wrap.appendChild(avatar);
+    wrap.appendChild(bw);
+    return wrap;
+  }
+
+  function scrollToBottom(){
+    requestAnimationFrame(()=>{ chatScroll.scrollTop = chatScroll.scrollHeight; });
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // ---- input handling ----
+  input.addEventListener('input', ()=>{
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 180) + 'px';
+    sendBtn.disabled = input.value.trim().length === 0 && attachments.length === 0;
+  });
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      trySend();
+    }
+  });
+  sendBtn.addEventListener('click', trySend);
+
+  document.querySelectorAll('.suggest-card').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      input.value = c.dataset.p;
+      input.dispatchEvent(new Event('input'));
+      trySend();
+    });
+  });
+
+  // ---- nút + : đính kèm ảnh / tệp / chọn model ----
+  attachBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const willOpen = !attachMenu.classList.contains('open');
+    attachMenu.classList.toggle('open', willOpen);
+    attachBtn.classList.toggle('open', willOpen);
+  });
+  document.addEventListener('click', (e)=>{
+    if(!attachMenu.contains(e.target) && e.target !== attachBtn){
+      attachMenu.classList.remove('open');
+      attachBtn.classList.remove('open');
+    }
+  });
+  attachMenu.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      attachMenu.classList.remove('open');
+      attachBtn.classList.remove('open');
+      const action = btn.dataset.action;
+      if(action === 'image') imageInput.click();
+      else if(action === 'file') fileInput.click();
+      else if(action === 'model') settingsBtn.click();
+    });
+  });
+
+  imageInput.addEventListener('change', ()=> handlePickedFiles(imageInput.files, 'image'));
+  fileInput.addEventListener('change', ()=> handlePickedFiles(fileInput.files, 'file'));
+
+  function handlePickedFiles(fileList, kind){
+    Array.from(fileList).forEach(file=>{
+      const item = { id: uid(), name: file.name, kind, dataUrl: null };
+      attachments.push(item);
+      if(kind === 'image'){
+        const reader = new FileReader();
+        reader.onload = ()=>{ item.dataUrl = reader.result; renderAttachChips(); };
+        reader.readAsDataURL(file);
+      }
+      renderAttachChips();
+    });
+    imageInput.value = '';
+    fileInput.value = '';
+    sendBtn.disabled = input.value.trim().length === 0 && attachments.length === 0;
+  }
+
+  function renderAttachChips(){
+    attachChips.innerHTML = '';
+    attachments.forEach(item=>{
+      const chip = document.createElement('div');
+      chip.className = 'attach-chip';
+      const thumb = (item.kind === 'image' && item.dataUrl)
+        ? '<img src="'+item.dataUrl+'">'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+      chip.innerHTML = thumb + '<span>'+escapeHtml(item.name)+'</span><span class="x" data-id="'+item.id+'">✕</span>';
+      chip.querySelector('.x').addEventListener('click', ()=>{
+        attachments = attachments.filter(a=> a.id !== item.id);
+        renderAttachChips();
+        sendBtn.disabled = input.value.trim().length === 0 && attachments.length === 0;
+      });
+      attachChips.appendChild(chip);
+    });
+  }
+
+  function trySend(){
+    const text = input.value.trim();
+    const atts = attachments;
+    if(!text && atts.length === 0) return;
+    const chat = state.chats[activeId];
+    if(chat.messages.length === 0){
+      chat.title = (text || (atts[0] && atts[0].name) || 'Đoạn chat mới').slice(0, 40);
+      chat._t = Date.now();
+    }
+    chat.messages.push({ role:'user', content:text, atts });
+    if(welcome.parentElement) welcome.remove();
+    chatInner.appendChild(buildMsgEl('user', text, atts));
+    scrollToBottom();
+    persist(); renderHistory();
+
+    input.value = '';
+    input.style.height = 'auto';
+    attachments = [];
+    renderAttachChips();
+    sendBtn.disabled = true;
+
+    // typing indicator
+    const typingWrap = document.createElement('div');
+    typingWrap.className = 'msg assistant';
+    typingWrap.innerHTML = '<div class="avatar bot"><img src="'+LOGO+'"></div>' +
+      '<div class="bubble-wrap"><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>';
+    chatInner.appendChild(typingWrap);
+    scrollToBottom();
+
+    const cfg = loadCfg();
+    if(cfg && cfg.key && cfg.endpoint){
+      const apiText = text || ('[Người dùng đã gửi ' + atts.length + ' tệp đính kèm: ' + atts.map(a=>a.name).join(', ') + ']');
+      callRealApi(chat, apiText, typingWrap, cfg);
+    } else {
+      setTimeout(()=>{
+        const reply = demoReply(text, atts);
+        typingWrap.remove();
+        chat.messages.push({ role:'assistant', content:reply });
+        chatInner.appendChild(buildMsgEl('assistant', reply));
+        scrollToBottom();
+        persist();
+      }, 650 + Math.random()*500);
+    }
+  }
+
+  async function callRealApi(chat, text, typingWrap, cfg){
+    try{
+      const history = chat.messages.map(m=>({role:m.role, content:m.content}));
+      const res = await fetch(cfg.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + cfg.key
+        },
+        body: JSON.stringify({
+          model: cfg.model || 'gpt-4o-mini',
+          messages: [{role:'system', content:'Bạn là VND, một trợ lý AI thân thiện, trả lời bằng tiếng Việt trừ khi được yêu cầu khác.'}, ...history]
+        })
+      });
+      const data = await res.json();
+      const reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
+        || (data.content && data.content[0] && data.content[0].text)
+        || 'Xin lỗi, không nhận được phản hồi hợp lệ từ API.';
+      typingWrap.remove();
+      chat.messages.push({ role:'assistant', content: reply });
+      chatInner.appendChild(buildMsgEl('assistant', reply));
+      scrollToBottom();
+      persist();
+    }catch(err){
+      typingWrap.remove();
+      const reply = 'Không thể kết nối tới API đã cấu hình. Vui lòng kiểm tra endpoint / API key trong Cài đặt.';
+      chat.messages.push({ role:'assistant', content: reply });
+      chatInner.appendChild(buildMsgEl('assistant', reply));
+      scrollToBottom();
+      persist();
+    }
+  }
+
+  function demoReply(text, atts){
+    if(!text && atts && atts.length){
+      const kind = atts.some(a=>a.kind==='image') ? 'ảnh' : 'tệp';
+      return 'Mình đã nhận được ' + atts.length + ' ' + kind + ' bạn gửi.\n\nHiện tại VND đang chạy ở chế độ demo nên chưa thể phân tích nội dung tệp/ảnh thật — hãy vào Cài đặt để kết nối một API hỗ trợ đọc ảnh/tệp.';
+    }
+    const t = text.toLowerCase();
+    if(/^(chào|hi|hello|xin chào)/.test(t)){
+      return 'Chào bạn! Mình là VND — hiện đang chạy ở chế độ demo (chưa kết nối API thật). Bạn muốn hỏi mình điều gì?';
+    }
+    if(t.includes('bạn là ai') || t.includes('vnd là gì')){
+      return 'Mình là VND, một trợ lý AI. Đây là bản demo giao diện — để mình trả lời thông minh hơn, hãy vào Cài đặt và kết nối một API tương thích OpenAI (endpoint + API key).';
+    }
+    return 'Mình đã nhận được: “' + text + '”.\n\nHiện tại VND đang chạy ở chế độ demo nên chỉ phản hồi mẫu, chưa phải AI thật. Mở Cài đặt (góc dưới sidebar) để nhập API endpoint và key, mình sẽ trả lời thông minh hơn nhiều.';
+  }
+
+  // ---- sidebar / settings ----
+  newChatBtn.addEventListener('click', ()=>{ startNewChat(); if(isMobile()) closeSidebar(); });
+  function openSidebar(){
+    sidebar.classList.remove('collapsed');
+    if(isMobile()) sidebarBackdrop.classList.add('open');
+  }
+  function closeSidebar(){
+    sidebar.classList.add('collapsed');
+    sidebarBackdrop.classList.remove('open');
+  }
+  toggleSidebar.addEventListener('click', ()=>{
+    sidebar.classList.contains('collapsed') ? openSidebar() : closeSidebar();
+  });
+  sidebarBackdrop.addEventListener('click', closeSidebar);
+  settingsBtn.addEventListener('click', ()=>{
+    const cfg = loadCfg() || {};
+    document.getElementById('apiEndpoint').value = cfg.endpoint || '';
+    document.getElementById('apiKey').value = cfg.key || '';
+    document.getElementById('apiModel').value = cfg.model || '';
+    overlay.classList.add('open');
+  });
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('open'); });
+  saveSettings.addEventListener('click', ()=>{
+    const cfg = {
+      endpoint: document.getElementById('apiEndpoint').value.trim(),
+      key: document.getElementById('apiKey').value.trim(),
+      model: document.getElementById('apiModel').value.trim()
+    };
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    applyCfgTag();
+    overlay.classList.remove('open');
+  });
+  clearSettings.addEventListener('click', ()=>{
+    localStorage.removeItem(CFG_KEY);
+    document.getElementById('apiEndpoint').value = '';
+    document.getElementById('apiKey').value = '';
+    document.getElementById('apiModel').value = '';
+    applyCfgTag();
+  });
+})();
+</script>
+
+</body>
+</html>
