@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Thiệp QR Trái Tim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Great+Vibes&display=swap">
+<style>
+  /* Layout: the finished card leads in a narrow column; the controls sit beside it on wide screens and below it on phones. */
+  :root {
+    --bg: #170b12;
+    --panel: #22121b;
+    --field: #190d14;
+    --line: #3b2331;
+    --fg: #fbeff3;
+    --muted: #bfa3b1;
+    --accent: #ff5c8a;
+    --accent-ink: #2a0711;
+    --ok: #4fd39a;
+    --warn: #f5b84a;
+    --font-ui: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #fdf3f6; --panel: #ffffff; --field: #fff8fa; --line: #efd5de; --fg: #2d1520;
+      --muted: #7d5a69; --accent: #d6286a; --accent-ink: #ffffff; --ok: #138a5b; --warn: #a76a00;
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #fdf3f6; --panel: #ffffff; --field: #fff8fa; --line: #efd5de; --fg: #2d1520;
+    --muted: #7d5a69; --accent: #d6286a; --accent-ink: #ffffff; --ok: #138a5b; --warn: #a76a00;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.5;
+    padding-block: 28px 40px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  header { grid-column: 1 / -1; }
+  h1 { margin: 0 0 6px; font-size: 26px; font-weight: 600; letter-spacing: 0.01em; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 52ch; }
+
+  .stage { display: grid; gap: 10px; min-width: 0; }
+  .card {
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
+    aspect-ratio: 1080 / 1935;
+    max-width: 100%;
+  }
+  .card img { display: block; width: 100%; height: auto; -webkit-touch-callout: default; }
+  .tip { margin: 0; color: var(--muted); font-size: 13px; text-align: center; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    align-content: start;
+  }
+  .field { display: grid; gap: 6px; min-width: 0; }
+  label, .legend { font-size: 13px; font-weight: 500; color: var(--muted); }
+  input[type="text"], textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 16px;
+    color: var(--fg);
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    resize: vertical;
+  }
+  textarea { min-height: 76px; }
+  input[type="text"]:focus-visible, textarea:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .hint { margin: 0; font-size: 13px; color: var(--muted); }
+  #sample { color: var(--warn); }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: 12px; }
+  .swatches input { position: absolute; opacity: 0; pointer-events: none; }
+  .swatches label {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--c);
+    border: 2px solid var(--panel);
+    box-shadow: 0 0 0 1px var(--line);
+    cursor: pointer;
+    display: block;
+  }
+  .swatches input:checked + label { box-shadow: 0 0 0 2px var(--fg); }
+  .swatches input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .bgs { display: flex; flex-wrap: wrap; gap: 12px; }
+  .bgs input { position: absolute; opacity: 0; pointer-events: none; }
+  .bgs label { display: block; width: 64px; aspect-ratio: 768 / 1376; border-radius: 10px; overflow: hidden; cursor: pointer; box-shadow: 0 0 0 1px var(--line); border: 2px solid var(--panel); }
+  .bgs label img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .bgs input:checked + label { box-shadow: 0 0 0 2px var(--accent); }
+  .bgs input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .btn {
+    font: inherit; font-weight: 600;
+    background: var(--accent); color: var(--accent-ink);
+    border: 0; border-radius: 10px; padding: 11px 18px; cursor: pointer;
+  }
+  .btn:active { transform: translateY(1px); }
+  #msg { font-size: 13px; color: var(--muted); min-width: 0; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--field);
+    justify-self: start; max-width: 100%;
+  }
+  .chip[hidden] { display: none; }
+  .chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+  .chip[data-state="ok"]::before { background: var(--ok); }
+  .chip[data-state="warn"]::before { background: var(--warn); }
+
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); text-decoration: none; display: inline-block; }
+  #linkOut { width: 100%; font: inherit; font-size: 15px; color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; }
+  input[type="text"][readonly] { color: var(--accent); }
+  @media (min-width: 860px) {
+    .wrap { grid-template-columns: minmax(0, 440px) minmax(0, 1fr); align-items: start; gap: 28px 36px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Thiệp QR Trái Tim</h1>
+    <p>Viết thư, ký tên, thêm nhạc và ảnh rồi bấm tạo link. Bạn sẽ nhận được link thiệp và mã QR hình trái tim để tặng người thương.</p>
+  </header>
+
+  <section class="stage" aria-label="Xem trước thiệp">
+    <div class="card"><img id="out" alt="Thiệp mã QR hình trái tim" width="1080" height="1935" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="></div>
+    <p class="tip">Nhấn giữ (hoặc bấm chuột phải) vào ảnh để lưu về máy.</p>
+    <p class="hint" id="sample" style="text-align:center">Đang xem trước với link ví dụ. Bấm “Tạo link & mã QR” để có mã thật.</p>
+  </section>
+
+  <section class="panel" aria-label="Tùy chỉnh">
+    <div class="field"><label for="f_title">Tiêu đề thư</label>
+      <input type="text" id="f_title" maxlength="60" value="Gửi mẹ!" autocomplete="off"></div>
+    <div class="field"><label for="f_msg">Nội dung thư</label>
+      <textarea id="f_msg" maxlength="1500" style="min-height:130px">Hôm nay là ngày 20/10. Xin gửi lời chúc tới người con yêu thương nhất. Luôn vui vẻ, luôn hạnh phúc và luôn may mắn trong cuộc sống, ngày càng xinh đẹp. Xin gửi tất cả lời chúc tốt đẹp đến với mẹ. Love Mom 💗</textarea></div>
+    <div class="field"><label for="f_sign">Ký tên</label>
+      <input type="text" id="f_sign" maxlength="60" placeholder="Ví dụ: Con gái yêu của mẹ" autocomplete="off"></div>
+    <div class="field"><label for="f_marq">Chữ chạy quanh trái tim</label>
+      <input type="text" id="f_marq" maxlength="200" value="🌹 Chúc mừng ngày 20/10 🌹 Happy Women's Day 🌹 With love, từ con gửi mẹ 💗" autocomplete="off"></div>
+    <div class="field"><label for="f_music">Link nhạc nền (file .mp3 trực tiếp)</label>
+      <input type="text" id="f_music" maxlength="600" placeholder="Để trống = dùng nhạc hộp có sẵn" autocomplete="off" inputmode="url">
+      <p class="hint">Phải là link tải thẳng file nhạc (kết thúc .mp3, .m4a…). Link YouTube/Drive không phát được.</p></div>
+    <div class="field"><label for="f_photos">Ảnh kỷ niệm (mỗi dòng 1 ảnh)</label>
+      <textarea id="f_photos" spellcheck="false" placeholder="https://.../anh1.jpg | Tết 2025 💗&#10;https://.../anh2.jpg"></textarea>
+      <p class="hint">Dạng: link ảnh, thêm “ | chú thích” nếu muốn. Tối đa 6 ảnh. Để trống = khung mẫu.</p>
+      <div class="row"><button type="button" class="btn ghost" id="pickPhoto">Chọn ảnh từ máy</button><input type="file" id="photoFile" accept="image/*" multiple hidden><span id="upMsg" class="hint"></span></div></div>
+
+    <div class="row">
+      <button type="button" class="btn" id="make">Tạo link &amp; mã QR</button>
+      <span id="makeMsg" aria-live="polite"></span>
+    </div>
+    <div class="field" id="linkBox" hidden>
+      <label for="linkOut">Link thiệp của bạn</label>
+      <input type="text" id="linkOut" readonly>
+      <div class="row">
+        <button type="button" class="btn" id="copyLink">Sao chép link</button>
+        <a class="btn ghost" id="openLink" target="_blank" rel="noopener">Mở thử</a>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="top">Dòng chữ phía trên</label>
+      <input type="text" id="top" value="i love you" maxlength="40" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="bot">Dòng chữ phía dưới</label>
+      <input type="text" id="bot" value="i love you in every universe" maxlength="60" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <span class="legend" id="bgLegend">Ảnh nền</span>
+      <div class="bgs" role="radiogroup" aria-labelledby="bgLegend">
+        <input type="radio" name="bg" id="bg0" value="0" checked><label for="bg0" title="Phong bì"><img alt="Phong bì" src="https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792228067620.png"></label>
+        <input type="radio" name="bg" id="bg1" value="1"><label for="bg1" title="Hộp hoa"><img alt="Hộp hoa" src="https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792230414581.png"></label>
+        <input type="radio" name="bg" id="bg2" value="2"><label for="bg2" title="Bình hoa"><img alt="Bình hoa" src="https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792231138713.png"></label>
+        <input type="radio" name="bg" id="bg3" value="3"><label for="bg3" title="Hộp quà"><img alt="Hộp quà" src="https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792231891349.png"></label>
+        <input type="radio" name="bg" id="bg4" value="4"><label for="bg4" title="Thiệp hoa"><img alt="Thiệp hoa" src="https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792233342223.png"></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="legend" id="colorLegend">Màu mã QR</span>
+      <div class="swatches" role="radiogroup" aria-labelledby="colorLegend">
+        <input type="radio" name="color" id="c1" value="#e1202d"><label for="c1" style="--c:#e1202d" title="Đỏ"></label>
+        <input type="radio" name="color" id="c2" value="#d9366f" checked><label for="c2" style="--c:#d9366f" title="Hồng"></label>
+        <input type="radio" name="color" id="c3" value="#9d1239"><label for="c3" style="--c:#9d1239" title="Đỏ rượu"></label>
+        <input type="radio" name="color" id="c4" value="#6d28b8"><label for="c4" style="--c:#6d28b8" title="Tím"></label>
+        <input type="radio" name="color" id="c5" value="#1b1b1f"><label for="c5" style="--c:#1b1b1f" title="Đen"></label>
+      </div>
+    </div>
+
+    <span class="chip" id="chip" data-state="busy" aria-live="polite"><span id="chipText">Đang tạo mã…</span></span>
+
+    <div class="row">
+      <button type="button" class="btn" id="dl" disabled>Tải ảnh QR</button>
+      <button type="button" class="btn ghost" id="copy" disabled>Sao chép ảnh</button>
+      <span id="msg" aria-live="polite"></span>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+/* Heart QR core: pure functions, no DOM.
+   The QR square is rotated 135deg so its empty corner (bottom-right) points up and the
+   finder-pattern corner (top-left) becomes the heart's tip. Two half-discs of decorative
+   modules on the two upper edges turn the diamond into a heart. */
+
+function qrBytesString(text) {
+  var bytes = new TextEncoder().encode(text);
+  var s = '';
+  for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return s;
+}
+
+function hashSeed(str) {
+  var h = 2166136261 >>> 0;
+  for (var i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h;
+}
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* Returns {n, cells:[[x,y],...], R} in the QR's own grid (x right, y down). */
+function buildHeartCells(text, ec, makeQR, opts) {
+  opts = opts || {};
+  var density = opts.density == null ? 0.45 : opts.density;
+  var gapAll = !!opts.gapAll;
+  var qr = makeQR(0, ec);
+  qr.addData(qrBytesString(text), 'Byte');
+  qr.make();
+  var n = qr.getModuleCount();
+  var rnd = mulberry32(hashSeed(text));
+  var cells = [];
+  var r, c, i, j;
+  for (r = 0; r < n; r++) for (c = 0; c < n; c++) if (qr.isDark(r, c)) cells.push([c, r]);
+
+  var half = n / 2;
+  var R = half + 0.3;
+  var GAP = 8; // keep one blank module beside the finder pattern
+  var reach = n + Math.ceil(R);
+
+  // right lobe: beyond the right edge
+  for (i = n; i <= reach; i++) {
+    for (j = 0; j < n; j++) {
+      if (i === n && (gapAll || j < GAP)) continue;
+      var dx = i + 0.5 - n, dy = j + 0.5 - half;
+      if (dx * dx + dy * dy <= R * R && rnd() < density) cells.push([i, j]);
+    }
+  }
+  // bottom lobe: beyond the bottom edge
+  for (j = n; j <= reach; j++) {
+    for (i = 0; i < n; i++) {
+      if (j === n && (gapAll || i < GAP)) continue;
+      var ex = i + 0.5 - half, ey = j + 0.5 - n;
+      if (ex * ex + ey * ey <= R * R && rnd() < density) cells.push([i, j]);
+    }
+  }
+  return { n: n, cells: cells, R: R };
+}
+
+/* Affine transform that fits the heart into widthPx, centred on (cx, cy). */
+function heartTransform(n, widthPx, cx, cy) {
+  var k = Math.SQRT1_2;
+  var half = n / 2;
+  var R = half + 0.3;
+  var ext = k * half + R + 0.7;
+  var bottom = k * n + 0.5;
+  var s = widthPx / (2 * ext);
+  var midY = (bottom - ext) / 2;
+  var ang = -3 * Math.PI / 4;
+  var cos = Math.cos(ang), sin = Math.sin(ang);
+  var a = s * cos, b = s * sin, c = -s * sin, d = s * cos;
+  var e = cx - (a * half + c * half);
+  var f = (cy - s * midY) - (b * half + d * half);
+  return { a: a, b: b, c: c, d: d, e: e, f: f, s: s, width: widthPx, height: s * (ext + bottom) };
+}
+
+</script>
+<script>
+(function () {
+  'use strict';
+
+  var W = 1080, H = 1935;
+  // Các ảnh nền. board = vùng bảng trắng (toạ độ trên canvas 1080x1935):
+  // cx, cy = tâm QR; qrW = độ rộng trái tim; x, y, w, h = vùng dùng để quét thử.
+  var BGS = [
+    { name: 'Phong bì',
+      url: 'https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792228067620.png',
+      shape: 'rect', topY: 585, topW: 720,
+      board: { cx: 552, cy: 1000, qrW: 520, x: 262, y: 715, w: 580, h: 530 } },
+    { name: 'Hộp hoa',
+      url: 'https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792230414581.png',
+      shape: 'circle', topY: 455, topW: 660,
+      board: { cx: 550, cy: 1048, qrW: 430, x: 335, y: 850, w: 430, h: 400 } },
+    { name: 'Bình hoa',
+      url: 'https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792231138713.png',
+      shape: 'rect', topY: 310, topW: 520,
+      board: { cx: 540, cy: 1030, qrW: 340, x: 350, y: 858, w: 380, h: 342 } },
+    { name: 'Hộp quà',
+      url: 'https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792231891349.png',
+      shape: 'rect', topY: 540, topW: 720,
+      board: { cx: 547, cy: 850, qrW: 380, x: 352, y: 660, w: 390, h: 375 } },
+    { name: 'Thiệp hoa',
+      url: 'https://raw.githubusercontent.com/namdexVND/VNDhinhanh/refs/heads/main/1792233342223.png',
+      shape: 'rect', topY: 360, topW: 520,
+      board: { cx: 543, cy: 865, qrW: 360, x: 343, y: 684, w: 400, h: 361 } }
+  ];
+  var bgIdx = 0;
+  var BOARD = BGS[0].board;
+  var DEFAULT_TEXT = 'https://example.com';
+  var DEFAULT_TOP = 'i love you';
+  var DEFAULT_BOTTOM = 'i love you in every universe';
+  var SCRIPT_FONT = '"Great Vibes", "Dancing Script", cursive';
+  var EC = 'Q';
+  // Tried in order until the rendered card can be read back by the decoder.
+  var CONFIGS = [
+    { density: 0.45, gapAll: false },
+    { density: 0.3, gapAll: true },
+    { density: 0.18, gapAll: true }
+  ];
+  var STORE_KEY = 'qr-trai-tim-v1';
+
+  function $(id) { return document.getElementById(id); }
+
+  var cv = document.createElement('canvas');
+  var token = 0;
+  var link = '';
+  var timer = null;
+
+  /* ---------- ảnh nền ---------- */
+  var bgImgs = {}, bgReady = {};
+  function loadBg(i) {
+    if (bgReady[i]) return bgReady[i];
+    bgReady[i] = new Promise(function (resolve) {
+      var im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = function () { bgImgs[i] = im; resolve(true); };
+      im.onerror = function () { delete bgImgs[i]; bgReady[i] = null; resolve(false); };
+      im.src = BGS[i].url;
+    });
+    return bgReady[i];
+  }
+
+  function drawBackground(c) {
+    var img = bgImgs[bgIdx];
+    if (img) {
+      // phủ kín canvas (cover), giữ đúng tỉ lệ ảnh gốc 768x1376
+      var r = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+      var dw = img.naturalWidth * r, dh = img.naturalHeight * r;
+      c.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    } else {
+      // dự phòng khi không tải được ảnh: nền hồng + bảng trắng
+      var g = c.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#fbd5df'); g.addColorStop(1, '#f6b9ca');
+      c.fillStyle = g; c.fillRect(0, 0, W, H);
+      c.fillStyle = '#ffffff';
+      c.beginPath();
+      if (BGS[bgIdx].shape === 'circle') {
+        c.arc(BOARD.cx, BOARD.cy, BOARD.qrW * 0.62, 0, Math.PI * 2);
+      } else if (c.roundRect) {
+        c.roundRect(BOARD.x - 20, BOARD.y - 20, BOARD.w + 40, BOARD.h + 40, 36);
+      } else {
+        c.rect(BOARD.x - 20, BOARD.y - 20, BOARD.w + 40, BOARD.h + 40);
+      }
+      c.fill();
+    }
+  }
+
+  /* ---------- drawing helpers ---------- */
+
+  function heartPath(c, x, y, u) {
+    var m = function (px, py) { return [x + px * u, y + py * u]; };
+    c.beginPath();
+    c.moveTo.apply(c, m(0, 0.45));
+    c.bezierCurveTo.apply(c, [].concat(m(-0.2, 0.28), m(-0.5, 0.1), m(-0.5, -0.15)));
+    c.bezierCurveTo.apply(c, [].concat(m(-0.5, -0.38), m(-0.3, -0.47), m(-0.18, -0.47)));
+    c.bezierCurveTo.apply(c, [].concat(m(-0.08, -0.47), m(0, -0.4), m(0, -0.3)));
+    c.bezierCurveTo.apply(c, [].concat(m(0, -0.4), m(0.08, -0.47), m(0.18, -0.47)));
+    c.bezierCurveTo.apply(c, [].concat(m(0.3, -0.47), m(0.5, -0.38), m(0.5, -0.15)));
+    c.bezierCurveTo.apply(c, [].concat(m(0.5, 0.1), m(0.2, 0.28), m(0, 0.45)));
+    c.closePath();
+  }
+
+  function flourish(c, cx, y, col) {
+    c.save();
+    c.strokeStyle = col;
+    c.fillStyle = col;
+    c.lineWidth = 3;
+    c.lineCap = 'round';
+    [-1, 1].forEach(function (dir) {
+      c.beginPath();
+      c.moveTo(cx + dir * 50, y);
+      c.quadraticCurveTo(cx + dir * 170, y + 9, cx + dir * 300, y - 6);
+      c.stroke();
+      for (var k = 0; k < 5; k++) {
+        var t = 0.1 + k * 0.19;
+        var u = 1 - t;
+        var px = cx + dir * (u * u * 50 + 2 * t * u * 170 + t * t * 300);
+        var py = u * u * y + 2 * t * u * (y + 9) + t * t * (y - 6);
+        var up = k % 2 === 0;
+        c.beginPath();
+        c.ellipse(px + dir * 12, py + (up ? -11 : 11), 25, 8, dir * (up ? -0.5 : 0.5), 0, Math.PI * 2);
+        c.fill();
+      }
+      c.beginPath(); c.arc(cx + dir * 316, y - 8, 5.5, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(cx + dir * 336, y - 10, 3, 0, Math.PI * 2); c.fill();
+    });
+    heartPath(c, cx, y - 2, 36);
+    c.fill();
+    c.restore();
+  }
+
+  function fitSize(c, txt, maxW, start) {
+    var size = start;
+    while (size > 30) {
+      c.font = size + 'px ' + SCRIPT_FONT;
+      if (c.measureText(txt).width <= maxW) break;
+      size -= 4;
+    }
+    return size;
+  }
+
+  function drawCard(o, cfg) {
+    cv.width = W;
+    cv.height = H;
+    var c = cv.getContext('2d', { willReadFrequently: true });
+    drawBackground(c);
+
+    // dòng chữ phía trên (trên bảng trắng)
+    c.textAlign = 'center';
+    c.textBaseline = 'alphabetic';
+    var size = fitSize(c, o.top, BGS[bgIdx].topW, 140);
+    c.font = size + 'px ' + SCRIPT_FONT;
+    var g = c.createLinearGradient(BOARD.cx - 300, 0, BOARD.cx + 300, 0);
+    g.addColorStop(0, '#b3185a');
+    g.addColorStop(1, '#e2457d');
+    c.fillStyle = g;
+    c.shadowColor = 'rgba(255, 255, 255, 0.9)';
+    c.shadowBlur = 16;
+    c.fillText(o.top, BOARD.cx, BGS[bgIdx].topY);
+    c.shadowBlur = 0;
+
+    // heart-shaped QR
+    var heart = buildHeartCells(o.text, EC, window.qrcode, cfg);
+    var t = heartTransform(heart.n, BOARD.qrW, BOARD.cx, BOARD.cy);
+    c.save();
+    c.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
+    c.fillStyle = o.color;
+    c.beginPath();
+    for (var i = 0; i < heart.cells.length; i++) {
+      c.rect(heart.cells[i][0] - 0.04, heart.cells[i][1] - 0.04, 1.08, 1.08);
+    }
+    c.fill();
+    c.restore();
+
+    // bottom line
+    var size2 = fitSize(c, o.bottom, 900, 100);
+    c.font = size2 + 'px ' + SCRIPT_FONT;
+    c.shadowColor = 'rgba(255, 255, 255, 0.9)';
+    c.shadowBlur = 14;
+    c.fillStyle = '#c92c6a';
+    c.fillText(o.bottom, BOARD.cx, 1745);
+    c.shadowBlur = 0;
+    flourish(c, BOARD.cx, 1805, '#e58aab');
+    return heart;
+  }
+
+  /* ---------- scan check ---------- */
+
+  function sameBytes(a, b) {
+    if (!a || a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  function verify(text) {
+    if (!window.jsQR) return null;
+    try {
+      var c = cv.getContext('2d', { willReadFrequently: true });
+      var id = c.getImageData(BOARD.x, BOARD.y, BOARD.w, BOARD.h);
+      var r = window.jsQR(id.data, id.width, id.height, { inversionAttempts: 'dontInvert' });
+      if (!r) return false;
+      return sameBytes(r.binaryData, Array.prototype.slice.call(new TextEncoder().encode(text)));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /* ---------- state + UI ---------- */
+
+  function currentColor() {
+    var el = document.querySelector('input[name="color"]:checked');
+    return el ? el.value : '#d9366f';
+  }
+
+  function currentBg() {
+    var el = document.querySelector('input[name="bg"]:checked');
+    var i = el ? parseInt(el.value, 10) : 0;
+    return BGS[i] ? i : 0;
+  }
+
+  function setChip(state, text) {
+    var chip = $('chip');
+    chip.hidden = !state;
+    chip.setAttribute('data-state', state || '');
+    $('chipText').textContent = text || '';
+  }
+
+  function loadFonts(a, b) {
+    if (!document.fonts || !document.fonts.load) return Promise.resolve();
+    return Promise.all([
+      document.fonts.load('150px "Great Vibes"', a),
+      document.fonts.load('90px "Great Vibes"', b)
+    ]).catch(function () {});
+  }
+
+  var FIELDS = ['f_title', 'f_msg', 'f_sign', 'f_marq', 'f_music', 'f_photos'];
+  function save() {
+    try {
+      var o = { top: $('top').value, bottom: $('bot').value, color: currentColor(), cv: 2, bg: currentBg(), f: {} };
+      FIELDS.forEach(function (id) { o.f[id] = $(id).value; });
+      localStorage.setItem(STORE_KEY, JSON.stringify(o));
+    } catch (e) { /* storage may be unavailable */ }
+  }
+
+  function restore() {
+    try {
+      var s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (!s) return;
+      if (typeof s.top === 'string') $('top').value = s.top;
+      if (typeof s.bottom === 'string') $('bot').value = s.bottom;
+      if (s.f) FIELDS.forEach(function (id) { if (typeof s.f[id] === 'string') $(id).value = s.f[id]; });
+      var el = s.cv === 2 ? document.querySelector('input[name="color"][value="' + s.color + '"]') : null;
+      if (el) el.checked = true;
+      var be = document.querySelector('input[name="bg"][value="' + s.bg + '"]');
+      if (be) be.checked = true;
+    } catch (e) { /* ignore */ }
+  }
+
+  function render() {
+    var mine = ++token;
+    var text = link || DEFAULT_TEXT;
+    $('sample').hidden = !!link;
+    if (!text) { setChip('warn', 'Hãy nhập link hoặc nội dung để tạo mã QR.'); return; }
+    if (!window.qrcode) {
+      setChip('warn', 'Chưa tải được thư viện tạo mã QR. Kiểm tra mạng rồi tải lại trang.');
+      return;
+    }
+    var bi = currentBg();
+    var o = {
+      text: text,
+      top: $('top').value || DEFAULT_TOP,
+      bottom: $('bot').value || DEFAULT_BOTTOM,
+      color: currentColor()
+    };
+    setChip('busy', 'Đang tạo mã…');
+    Promise.all([loadFonts(o.top, o.bottom), loadBg(bi)]).then(function () {
+      if (mine !== token) return;
+      bgIdx = bi;
+      BOARD = BGS[bi].board;
+      var bgOk = !!bgImgs[bi];
+      var ok = null;
+      try {
+        for (var k = 0; k < CONFIGS.length; k++) {
+          drawCard(o, CONFIGS[k]);
+          ok = verify(text);
+          if (ok !== false) break;
+        }
+      } catch (e) {
+        setChip('warn', 'Nội dung quá dài để tạo mã. Hãy dùng link ngắn hơn.');
+        return;
+      }
+      try { $('out').src = cv.toDataURL('image/png'); }
+      catch (e) { setChip('warn', 'Không xuất được ảnh nền (lỗi CORS). Hãy tải lại trang.'); return; }
+      if (!bgOk) setChip('warn', 'Chưa tải được ảnh nền phong bì. Kiểm tra mạng rồi tải lại trang.');
+      else if (ok === true) setChip('ok', 'Đã thử quét: đọc đúng nội dung.');
+      else if (ok === false) setChip('warn', 'Thử quét chưa đọc được. Hãy dùng link ngắn hơn hoặc đổi sang màu đậm hơn.');
+      else setChip('', '');
+    });
+  }
+
+  function schedule() {
+    save();
+    clearTimeout(timer);
+    timer = setTimeout(render, 220);
+  }
+
+  function copyImage() {
+    var msg = $('msg');
+    if (!navigator.clipboard || !window.ClipboardItem) {
+      msg.textContent = 'Trình duyệt này chưa cho sao chép ảnh. Hãy nhấn giữ ảnh để lưu.';
+      return;
+    }
+    cv.toBlob(function (blob) {
+      navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(function () {
+        msg.textContent = 'Đã sao chép ảnh.';
+      }, function () {
+        msg.textContent = 'Chưa sao chép được. Hãy nhấn giữ ảnh để lưu.';
+      });
+    }, 'image/png');
+  }
+
+  function parsePhotos(t) {
+    return t.split('\n').map(function (l) {
+      l = l.trim(); if (!l) return null;
+      var i = l.indexOf('|');
+      return i < 0 ? { src: l, caption: '' } : { src: l.slice(0, i).trim(), caption: l.slice(i + 1).trim() };
+    }).filter(Boolean);
+  }
+
+  function create() {
+    var btn = $('make'), msg = $('makeMsg');
+    var data = { title: $('f_title').value, message: $('f_msg').value, sign: $('f_sign').value,
+      marquee: $('f_marq').value, musicUrl: $('f_music').value, photos: parsePhotos($('f_photos').value) };
+    if (!data.message.trim()) { msg.textContent = 'Hãy nhập nội dung thư.'; return; }
+    btn.disabled = true; msg.textContent = 'Đang tạo link…';
+    fetch('/api/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || 'Lỗi tạo link'); return j; }); })
+      .then(function (j) {
+        link = j.url; $('linkOut').value = link; $('openLink').href = link; $('linkBox').hidden = false;
+        $('dl').disabled = false; $('copy').disabled = false;
+        msg.textContent = j.persistent === false ? 'Đã tạo (chế độ chạy thử: chưa nối database nên link sẽ mất khi server khởi động lại).' : 'Đã tạo link.';
+        render();
+      })
+      .catch(function (e) { msg.textContent = e.message; })
+      .then(function () { btn.disabled = false; });
+  }
+
+  function copyLink() {
+    var el = $('linkOut'), msg = $('makeMsg');
+    function ok() { msg.textContent = 'Đã sao chép link.'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(ok, function () { el.select(); document.execCommand('copy'); ok(); });
+    else { el.select(); document.execCommand('copy'); ok(); }
+  }
+
+  function download() {
+    cv.toBlob(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'thiep-qr-trai-tim.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    }, 'image/png');
+  }
+
+  function compress(file) {
+    return new Promise(function (res, rej) {
+      var im = new Image(), u = URL.createObjectURL(file);
+      var to = setTimeout(function () { URL.revokeObjectURL(u); rej(new Error('Không đọc được ảnh, thử ảnh JPG/PNG khác')); }, 15000);
+      im.onload = function () {
+        clearTimeout(to);
+        var M = 1024, k = Math.min(1, M / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+        c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(u);
+        res(c.toDataURL('image/jpeg', 0.8).split(',')[1]);
+      };
+      im.onerror = function () { clearTimeout(to); URL.revokeObjectURL(u); rej(new Error('Không đọc được ảnh, thử ảnh JPG/PNG khác')); };
+      im.src = u;
+    });
+  }
+
+  function uploadOne(file, say) {
+    say('đang nén');
+    return compress(file).then(function (b64) {
+      say('đang gửi ' + Math.round(b64.length / 1024) + ' KB');
+      var ac = new AbortController(), t = setTimeout(function () { ac.abort(); }, 40000);
+      return fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: b64 }), signal: ac.signal })
+        .then(function (r) { clearTimeout(t); return r; }, function (e) { clearTimeout(t); throw new Error(e.name === 'AbortError' ? 'quá thời gian chờ, thử lại' : e.message); });
+    }).then(function (r) {
+      return r.text().then(function (tx) {
+        var j; try { j = JSON.parse(tx); } catch (e) { throw new Error('máy chủ trả lỗi ' + r.status + ' (kiểm tra file api/upload.js)'); }
+        if (!r.ok) throw new Error(j.error || 'lỗi tải ảnh');
+        return j.url;
+      });
+    });
+  }
+
+  function pickPhotos(files) {
+    var box = $('f_photos'), msg = $('upMsg'), list = Array.prototype.slice.call(files), i = 0;
+    var room = 6 - box.value.split('\n').filter(function (l) { return l.trim(); }).length;
+    if (room <= 0) { msg.textContent = 'Đã đủ 6 ảnh.'; return; }
+    list = list.slice(0, room);
+    (function next() {
+      if (i >= list.length) { msg.textContent = 'Xong, đã thêm ' + list.length + ' ảnh.'; save(); return; }
+      uploadOne(list[i], function (st) { msg.textContent = 'Ảnh ' + (i + 1) + '/' + list.length + ': ' + st + '…'; }).then(function (u) {
+        box.value = (box.value.trim() ? box.value.replace(/\s+$/, '') + '\n' : '') + u;
+        i++; next();
+      }).catch(function (e) { msg.textContent = 'Lỗi ảnh ' + (i + 1) + ': ' + e.message; });
+    })();
+  }
+
+  function init() {
+    restore();
+    ['top', 'bot'].forEach(function (id) { $(id).addEventListener('input', schedule); });
+    FIELDS.forEach(function (id) { $(id).addEventListener('input', save); });
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="color"], input[name="bg"]'), function (el) {
+      el.addEventListener('change', schedule);
+    });
+    $('make').addEventListener('click', create);
+    $('pickPhoto').addEventListener('click', function () { $('photoFile').click(); });
+    $('photoFile').addEventListener('change', function () { pickPhotos(this.files); this.value = ''; });
+    $('copyLink').addEventListener('click', copyLink);
+    $('dl').addEventListener('click', download);
+    $('copy').addEventListener('click', copyImage);
+    render();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+</script>
+</body></html>
