@@ -1,0 +1,6 @@
+{
+  "rewrites": [{ "source": "/w/:id", "destination": "/api/view?id=:id" }],
+  "functions": {
+    "api/view.js": { "includeFiles": "template/**" }
+  }
+}
