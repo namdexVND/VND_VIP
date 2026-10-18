@@ -1,10 +1,10 @@
 {
   "rewrites": [
     { "source": "/w/:id", "destination": "/api/view?id=:id" },
+    { "source": "/galaxy", "destination": "/galaxy.html" },
     { "source": "/g/:id", "destination": "/api/galaxy-view?id=:id" }
   ],
   "functions": {
-    "api/view.js": { "includeFiles": "template/**" },
-    "api/galaxy-view.js": { "includeFiles": "template/**" }
+    "api/*.js": { "includeFiles": "template/**" }
   }
 }
