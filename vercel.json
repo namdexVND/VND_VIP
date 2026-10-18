@@ -2,7 +2,9 @@
   "rewrites": [
     { "source": "/w/:id", "destination": "/api/view?id=:id" },
     { "source": "/galaxy", "destination": "/galaxy.html" },
-    { "source": "/g/:id", "destination": "/api/galaxy-view?id=:id" }
+    { "source": "/g/:id", "destination": "/api/galaxy-view?id=:id" },
+    { "source": "/flower", "destination": "/flower.html" },
+    { "source": "/f/:id", "destination": "/api/flower-view?id=:id" }
   ],
   "functions": {
     "api/*.js": { "includeFiles": "template/**" }
